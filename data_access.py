@@ -2,8 +2,8 @@ import csv
 from dataclasses import asdict
 from datetime import datetime, time
 
-from sqlalchemy import String, create_engine, func, select
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
+from sqlalchemy import ForeignKey, String, create_engine, func, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 from domain import WeatherRecord, WindDirection
 
@@ -30,6 +30,12 @@ class Weather(Base):
     wind_degree: Mapped[int | None]
     wind_direction: Mapped[WindDirection | None]
     sunrise: Mapped[time | None]
+    precipitation: Mapped["Precipitation"] = relationship()
+
+
+class Precipitation(Base):
+    __tablename__ = "precipitation"
+    weather_id: Mapped[int] = mapped_column(ForeignKey("weather.id"), primary_key=True)
     precip_mm: Mapped[float | None]
     precip_in: Mapped[float | None]
     humidity: Mapped[int | None]
@@ -56,8 +62,14 @@ def read_csv(path):
             )
 
 
+PRECIPITATION = ("precip_mm", "precip_in", "humidity", "cloud")
+
+
 def save(session, records):
-    session.add_all(Weather(**asdict(r)) for r in records)
+    for r in records:
+        data = asdict(r)
+        precipitation = Precipitation(**{name: data.pop(name) for name in PRECIPITATION})
+        session.add(Weather(**data, precipitation=precipitation))
 
 
 def count(session):
@@ -68,4 +80,5 @@ def stats(session):
     return {
         "rows": count(session),
         "countries": session.scalar(select(func.count(func.distinct(Weather.country)))),
+        "precipitation": session.scalar(select(func.count(Precipitation.weather_id))),
     }
