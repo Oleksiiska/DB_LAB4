@@ -2,8 +2,8 @@ import data_access
 from domain import should_go_outside
 
 
-def import_csv(path):
-    with data_access.connect() as session:
+def import_csv(path, db="pg"):
+    with data_access.connect(db) as session:
         if data_access.count(session):
             return 0
         records = list(data_access.read_csv(path))
@@ -14,11 +14,11 @@ def import_csv(path):
         return len(records)
 
 
-def stats():
-    with data_access.connect() as session:
+def stats(db="pg"):
+    with data_access.connect(db) as session:
         return data_access.stats(session)
 
 
-def find(country, day):
-    with data_access.connect() as session:
+def find(country, day, db="pg"):
+    with data_access.connect(db) as session:
         return data_access.find(session, country, day)

@@ -2,24 +2,28 @@ import csv
 from dataclasses import asdict, fields
 from datetime import datetime, time, timedelta
 
-from sqlalchemy import ForeignKey, String, create_engine, func, select
+from sqlalchemy import Double, ForeignKey, String, create_engine, func, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 from domain import WeatherRecord, WindDirection
 
-URL = "postgresql+psycopg://weather:weather@localhost:5432/weather"
+URLS = {
+    "pg": "postgresql+psycopg://weather:weather@localhost:5432/weather",
+    "mysql": "mysql+pymysql://weather:weather@localhost:3306/weather?charset=utf8mb4",
+}
 
 
-def connect():
-    return Session(create_engine(URL))
+def connect(db="pg"):
+    return Session(create_engine(URLS[db]))
 
 
 class Base(DeclarativeBase):
-    pass
+    type_annotation_map = {float: Double}
 
 
 class Weather(Base):
     __tablename__ = "weather"
+    __table_args__ = {"mysql_charset": "utf8mb4", "mysql_collate": "utf8mb4_bin"}
     id: Mapped[int] = mapped_column(primary_key=True)
     country: Mapped[str | None] = mapped_column(String(100))
     location_name: Mapped[str | None] = mapped_column(String(100))
@@ -35,6 +39,7 @@ class Weather(Base):
 
 class Precipitation(Base):
     __tablename__ = "precipitation"
+    __table_args__ = {"mysql_charset": "utf8mb4", "mysql_collate": "utf8mb4_bin"}
     weather_id: Mapped[int] = mapped_column(ForeignKey("weather.id"), primary_key=True)
     precip_mm: Mapped[float | None]
     precip_in: Mapped[float | None]
