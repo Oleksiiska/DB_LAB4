@@ -40,6 +40,7 @@ class Precipitation(Base):
     precip_in: Mapped[float | None]
     humidity: Mapped[int | None]
     cloud: Mapped[int | None]
+    go_outside: Mapped[bool]
 
 
 def read_csv(path):
@@ -62,7 +63,7 @@ def read_csv(path):
             )
 
 
-PRECIPITATION = ("precip_mm", "precip_in", "humidity", "cloud")
+PRECIPITATION = ("precip_mm", "precip_in", "humidity", "cloud", "go_outside")
 
 
 def save(session, records):
@@ -81,4 +82,6 @@ def stats(session):
         "rows": count(session),
         "countries": session.scalar(select(func.count(func.distinct(Weather.country)))),
         "precipitation": session.scalar(select(func.count(Precipitation.weather_id))),
+        "go_outside_yes": session.scalar(select(func.count()).where(Precipitation.go_outside)),
+        "go_outside_no": session.scalar(select(func.count()).where(~Precipitation.go_outside)),
     }

@@ -22,3 +22,8 @@ class WeatherRecord:
     precip_in: float
     humidity: int
     cloud: int
+    go_outside: bool | None = None
+
+
+def should_go_outside(precip_mm):
+    return precip_mm < 2.5
