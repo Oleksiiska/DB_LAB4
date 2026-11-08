@@ -1,6 +1,6 @@
 import csv
-from dataclasses import asdict
-from datetime import datetime, time
+from dataclasses import asdict, fields
+from datetime import datetime, time, timedelta
 
 from sqlalchemy import ForeignKey, String, create_engine, func, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
@@ -85,3 +85,18 @@ def stats(session):
         "go_outside_yes": session.scalar(select(func.count()).where(Precipitation.go_outside)),
         "go_outside_no": session.scalar(select(func.count()).where(~Precipitation.go_outside)),
     }
+
+
+def find(session, country, day):
+    start = datetime.combine(day, time())
+    query = (
+        select(Weather)
+        .where(func.lower(Weather.country) == country.lower())
+        .where(Weather.last_updated >= start, Weather.last_updated < start + timedelta(days=1))
+        .order_by(Weather.location_name, Weather.last_updated)
+    )
+    return [
+        WeatherRecord(**{f.name: getattr(w.precipitation if f.name in PRECIPITATION else w, f.name)
+                         for f in fields(WeatherRecord)})
+        for w in session.scalars(query)
+    ]

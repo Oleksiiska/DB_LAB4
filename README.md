@@ -1,4 +1,3 @@
 ```bash
-alembic upgrade head
-python cli.py stats
+python cli.py show Hungary 2024-11-20
 ```

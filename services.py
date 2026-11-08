@@ -17,3 +17,8 @@ def import_csv(path):
 def stats():
     with data_access.connect() as session:
         return data_access.stats(session)
+
+
+def find(country, day):
+    with data_access.connect() as session:
+        return data_access.find(session, country, day)
